@@ -1,0 +1,18 @@
+{
+  "endpoints": {
+    "environement": "/environment",
+    "health": "/health",
+    "status": "/status"
+  },
+  "environments": {
+    "development": "DEVELOPMENT",
+    "production": "PRODUCTION",
+    "testing": "TESTING"
+  },
+  "status": {
+    "error": "ERROR",
+    "pending": "PENDING",
+    "up": "UP",
+    "down": "DOWN"
+  }
+}

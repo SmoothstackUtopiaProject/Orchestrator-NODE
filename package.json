@@ -1,7 +1,7 @@
 {
-  "name": "airportms-node",
+  "name": "orchestrator-node",
   "version": "1.0.0",
-  "description": "Utopia AirportMS",
+  "description": "Utopia Orchestrator",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
@@ -9,16 +9,17 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/SmoothstackUtopiaProject/AirportMS-NODE.git"
+    "url": "git+https://github.com/SmoothstackUtopiaProject/Orchestrator-NODE.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/SmoothstackUtopiaProject/AirportMS-NODE/issues"
+    "url": "https://github.com/SmoothstackUtopiaProject/Orchestrator-NODE/issues"
   },
-  "homepage": "https://github.com/SmoothstackUtopiaProject/AirportMS-NODE#readme",
+  "homepage": "https://github.com/SmoothstackUtopiaProject/Orchestrator-NODE#readme",
   "dependencies": {
     "body-parser": "^1.19.0",
+    "colors": "^1.4.0",
     "express": "^4.17.1",
     "mysql": "^2.18.1"
   }
