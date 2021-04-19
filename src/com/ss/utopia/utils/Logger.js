@@ -1,11 +1,43 @@
+const _ = require("lodash");
 const colors = require("colors");
 const Constants = require("../resources/Constants.json");
+const LogIndicator = String(`-=[Logger]=-`);
 
 class Logger {
+  // State Variables
+  static applicationId = "";
   static isDebugActive = true;
   static isErrorActive = true;
   static isInfoActive = true;
   static isWarnActive = true;
+  static listeners = {};
+
+  // Color Variables
+  static debugStyle = colors.cyan;
+  static errorStyle = colors.bgRed.white;
+  static infoStyle = colors.green;
+  static warnStyle = colors.bgYellow.white;
+
+  static publish(message) {
+    const listenerKeys = Object.keys(Logger.listeners);
+    for(const i in listenerKeys) {
+      if(Logger.listeners[listenerKeys[i]]) {
+        Logger.listeners[listenerKeys[i]](message);
+      }
+      else {
+        Logger.unsubscribe(listenerKeys[i]);
+      }
+    }
+  }
+
+  static subscribe(listener) {
+    const key = _.uniqueId("LoggerListener-");
+    Logger.listeners[key] = listener;
+  }
+
+  static unsubscribe(key) {
+    _.omit(Logger.listeners, key);
+  }
 
   static initialize(logLevel) {
     let environment = Constants.environments.production;
@@ -36,30 +68,38 @@ class Logger {
         this.isInfoActive = true;
         this.isWarnActive = true;
     }
-    Logger.info(`-=[Logger]=- config: "${environment}"`);
+    Logger.info(`${LogIndicator} config: "${environment}".`);
   }
 
   static debug(message) {
     if (this.isDebugActive) {
-      console.debug(`[DEBUG]: ${message}`.cyan);
+      const formattedMessage = String(`[DEBUG]: ${message}`);
+      Logger.publish(formattedMessage);
+      console.debug(Logger.debugStyle(formattedMessage));
     }
   }
 
   static error(message) {
     if (this.isErrorActive) {
-      console.error(`[ERROR]: ${message}`.bgRed.white);
+      const formattedMessage = String(`[ERROR]: ${message}`);
+      Logger.publish(formattedMessage);
+      console.error(Logger.errorStyle(formattedMessage));
     }
   }
 
   static info(message) {
     if (this.isInfoActive) {
-      console.info(`[INFO]: ${message}`.green);
+      const formattedMessage = String(`[INFO]: ${message}`);
+      Logger.publish(formattedMessage);
+      console.info(Logger.infoStyle(formattedMessage));
     }
   }
 
   static warn(message) {
     if (this.isWarnActive) {
-      console.warn(`[WARN]: ${message}`.bgYellow.white);
+      const formattedMessage = String(`[WARN]: ${message}`);
+      Logger.publish(formattedMessage);
+      console.warn(Logger.warnStyle(formattedMessage));
     }
   }
 }

@@ -3,14 +3,17 @@ const Constants = require("./resources/Constants.json");
 class Store {
   static defaultState = {
     database: {
-      host: "utopiaairlines-mysql.clufugeeqpsu.us-east-1.rds.amazonaws.com",
-      user: "aws",
-      password: "UtopiaAirlines1",
-      database: "utopia",
-      port: 3306,
+      password: "",
+      username: "",
     },
     endpoints: [],
-    environment: Constants.environments.development,
+    environment: {
+      applicationName: "Utopia-OrchestratorMS",
+      cloudInstanceId: "",
+      deployment: Constants.environments.development,
+      serverPort: 8080,
+      version: "0.0.1",
+    },
     health: {
       average: 100,
       connectedServices: 11,
@@ -21,7 +24,6 @@ class Store {
       ],
       errors: [],
     },
-    serverPort: 8080,
     services: {
       example1: {
         id: "12733234-9fa5-11eb-a8b3-0242ac130003",

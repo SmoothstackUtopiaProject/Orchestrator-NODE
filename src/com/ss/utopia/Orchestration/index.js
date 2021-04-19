@@ -1,25 +1,43 @@
 const express = require("express");
+const Controller = require("../Controller");
+const Firebase = require("./Firebase");
+const FirebaseCloudLogs = require("./FirebaseCloudLogs");
+const Logger = require("../utils/Logger");
+const Store = require("../Store");
+
 const app = express();
-const Constants = require("./resources/Constants.json");
-const Controller = require("./Controller");
-const Logger = require("./utils/Logger");
-const Store = require("./Store");
+const Constants = require("../resources/Constants.json");
+const startupPollInterval = 1000;
+const startupTimeout = 10000;
 
 class Orchestration {
 
   static initialize() {
     // 1) Environment
+    Orchestration.pollEnvironment(startupTimeout);
     Orchestration.initializeEnvironment();
-    const { environment, serverPort } = Store.getState();
+    const { database, environment } = Store.getState();
 
     // 2) Logger
-    Logger.initialize(environment);
-    Logger.info(`Orchestrator initialized with config: "${environment}"`);
+    Logger.initialize(environment.deployment);
+    Logger.info(`[ENVIRONMENT] Application: ${environment.applicationName} v${environment.version}.`);
+    Logger.info(`[ENVIRONMENT] initialized with config: "${environment.deployment}".`);
 
     // 3) Endpoint Listeners
-    app.listen(serverPort, () => {
-      Logger.info(`Orchestrator listening on port: ${serverPort}`);
+    app.listen(environment.serverPort, () => {
+      Logger.info(`[ENVIRONMENT] listening on port: ${environment.serverPort}.`);
       Orchestration.initializeEndpoints();
+    });
+
+    // 4) Firebase
+    Firebase.initialize(() => {
+      Firebase.login(database.username, database.password,
+        (err) => Logger.error(`[FIREBASE] failed to authenticate credentials.\n${err}`),
+        () => {
+          Logger.info(`[FIREBASE] successfully authenticated.`);
+          FirebaseCloudLogs.initialize();
+        }
+      );
     });
   }
 
@@ -30,52 +48,32 @@ class Orchestration {
         const [ argName, argValue ] = args[i].split("=");
         switch(argName) {
 
-          // Database - Host
-          case "dbhost":
-            Store.setState((state) => ({ "database": {...state.database, "host": argValue }}));
-          break;
-
-          // Database - Name
-          case "dbname":
-            Store.setState((state) => ({ "database": {...state.database, "database": argValue }}));
-          break;
-
           // Database - Password
-          case "dbpassword":
-            Store.setState((state) => ({ "database": {...state.database, "password": argValue }}));
+          case "password":
+            Store.setState((state) => ({ "database": { ...state.database, "password": argValue }}));
           break;
 
-          // Database - Port
-          case "dbport":
-            if(!isNaN(parseInt(argValue, 10))) {
-              Store.setState((state) => ({ "database": {...state.database, "port": argValue }}));
-            }
-            else {
-              console.error(`[INVALID ARGUMENT]: "${argValue}" is not a valid Database Port (must be an integer).`);
-            }
+          // Database - Username
+          case "username":
+            Store.setState((state) => ({ "database": { ...state.database, "username": argValue }}));
           break;
 
-          // Database - User
-          case "dbuser":
-            Store.setState((state) => ({ "database": {...state.database, "user": argValue }}));
-          break;
-
-          // Server - Environment
+          // Environment - Deployment
           case "env":
             if(argValue === Constants.environments.includesargValue) {
-                Store.setState(() => ({ "environment": argValue }));
+                Store.setState((state) => ({ "environment": { ...state.environment, "deployment": argValue }}));
             } else {
               console.error(
                 `[INVALID ARGUMENT]: "${argValue}" is not a valid Environment - Defaulting to "development".`,
-                `Valid Environment values are: ${JSON.stringify(Constants.environments)}`
+                `Valid Environment values are: ${Object.values(Constants.environments).join(", ")}`
               );
             }
           break;
 
-          // Server - Port
+          // Environment - Server Port
           case "port":
             if(!isNaN(parseInt(argValue, 10))) {
-              Store.setState(() => ({ "serverPort": argValue }));
+              Store.setState((state) => ({ "environment": { ...state.environment, "serverPort": argValue }}));
             }
             else {
               console.error(`[INVALID ARGUMENT]: "${argValue}" is not a valid Server Port (must be an integer).`);
@@ -125,6 +123,33 @@ class Orchestration {
       }
     }
     Logger.debug(`Established endpoints: \n${endpoints.join("\n")}`);
+  }
+
+  static pollEnvironment(timeout) {
+    const { environment, status } = Store.getState();
+    if(status === Constants.status.pending) {
+
+      let environmentReady = true;
+      const environmentKeys = Object.keys(environment);
+      for(const i in environmentKeys) {
+        if(!environment[environmentKeys[i]]) {
+          environmentReady = false;
+          break;
+        }
+      }
+
+      if(environmentReady) {
+        Store.setState(() => ({ status: Constants.status.up }));
+        Logger.info(`all systems go!`);
+      } else if(timeout < 0) {
+        console.error(`[ERROR] failed to initialize, shutting down . . .`);
+        process.exit(0);
+      } else {
+        setTimeout(() => {
+          Orchestration.pollEnvironment(timeout - startupPollInterval);
+        }, startupPollInterval);
+      }
+    }
   }
 }
 module.exports = Orchestration;

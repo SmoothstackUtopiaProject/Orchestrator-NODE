@@ -9,6 +9,16 @@
     "production": "PRODUCTION",
     "testing": "TESTING"
   },
+  "firebase": {
+    "apiKey": "AIzaSyAwHdNNNiYaOpZQDQozGR05tiaNxMuQGPE",
+    "appId": "1:5936426445:web:f527ccf8fccb6d71d46884",
+    "authDomain": "utopiaairlines-63f46.firebaseapp.com",
+    "messagingSenderId": "5936426445",
+    "measurementId": "G-VJX9DBTKX5",
+    "projectId": "utopiaairlines-63f46",
+    "storageBucket": "utopiaairlines-63f46.appspot.com",
+    "version": "8.4.1"
+  },
   "status": {
     "error": "ERROR",
     "pending": "PENDING",

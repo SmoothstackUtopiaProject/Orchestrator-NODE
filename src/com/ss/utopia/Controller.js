@@ -8,7 +8,7 @@ class Controller {
   ];
 
   static getEndpoints() {
-    return this.endpoints;
+    return Controller.endpoints;
   }
 
   static handleEnvironmentCheck(request, response) {
